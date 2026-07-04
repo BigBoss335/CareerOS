@@ -1,0 +1,489 @@
+{
+  "name": "02 - Job Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f1a9ea3-7733-4050-83ce-9950665778b9",
+              "name": "job_description",
+              "value": "Senior Site Reliability Engineer\n\nExperience: 15+ years\n\nSkills:\nLinux\nSolaris\nPython\nAnsible\nKubernetes\nAWS\nAzure\n\nResponsibilities:\nLead SRE team.\nAutomate infrastructure.\nImprove system reliability.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        192,
+        -1008
+      ],
+      "id": "487048b7-d3a5-402b-b0fc-ad4610533e7f",
+      "name": "Job Description"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert Technical Recruiter and Career Advisor.\n\nYour task is to compare the Job Description with the Candidate Profile.\n\nEvaluate the candidate and return ONLY valid JSON.\n\nJob Description:\n\n{{ $('Job Description').item.json.job_description }}\n\nCandidate Profile:\n\n{{ JSON.stringify($('Parse Candidate Profile').item.json, null, 2) }}\n\nScoring Rules:\n\nCalculate the match_score out of 100 using:\n\n- Experience Match = 30%\n- Technical Skills Match = 40%\n- Career Goal Match = 20%\n- Leadership Match = 10%\n\nExplain the reasoning internally before generating the final score.\n\nReturn only the final JSON.\n\nRules:\n\n1. match_score must be an integer between 0 and 100.\n2. recommendation must be exactly one of:\n   - Apply\n   - Maybe\n   - Skip\n3. confidence must be exactly one of:\n   - High\n   - Medium\n   - Low\n4. strengths must be an array.\n5. missing_skills must be an array.\n6. reason must be a single sentence.\n\nReturn this JSON structure:\n\n{\n  \"match_score\": 0,\n  \"recommendation\": \"Apply | Maybe | Skip\",\n  \"confidence\": \"High | Medium | Low\",\n  \"strengths\": [],\n  \"missing_skills\": [],\n  \"reason\": \"\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1872,
+        -1008
+      ],
+      "id": "6108f209-7091-4084-9033-14f824553d5e",
+      "name": "JD Analyzer",
+      "credentials": {
+        "openAiApi": {
+          "id": "gTPFzBmYSwe9tWs0",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -1008
+      ],
+      "id": "47fdea7a-6f0f-4e02-9e9e-f1c5b7ef275c",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/root/CareerOS/data/candidate-profile.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        -1008
+      ],
+      "id": "6ebe6faf-3aab-4daa-a50f-2cbf4ef25df3",
+      "name": "Read Candidate Profile"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        -1008
+      ],
+      "id": "842bac15-ef1c-427d-8a2a-d18f0eafd1da",
+      "name": "Parse Candidate Profile"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d11f64eb-57a9-4112-b5be-e205383e7357",
+              "name": "analysis_json",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        48,
+        -736
+      ],
+      "id": "43cffb2c-cca8-457d-afa5-5f27e286175c",
+      "name": "Prepare Analysis JSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: JSON.parse($json.analysis_json)\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -736
+      ],
+      "id": "0e2b78de-b8cd-4ad6-85a2-b48c00233403",
+      "name": "Parse Analysis JSON"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        -736
+      ],
+      "id": "ae35712c-1ce5-43ff-8c4b-7b894f5e2b99",
+      "name": "Create Analysis File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Generate File Names').item.json.job_analysis_file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -736
+      ],
+      "id": "bd74f14b-49a6-412f-bb50-d1bc6b91224b",
+      "name": "Save Job Analysis"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9daeee28-dee5-4c9e-b46b-8340565b5e38",
+              "name": "application_id",
+              "value": "={{\n$now.format('yyyy-MM-dd_HHmmss') + '_' +\n$json.job_description\n.split('\\n')[0]\n.replace(/[^a-zA-Z0-9 ]/g, '')\n.replace(/\\s+/g, '-')\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        -1008
+      ],
+      "id": "ea3377cc-b950-4d97-8ac6-e2358e0ac998",
+      "name": "Generate Application-ID"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "job_description",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -1008
+      ],
+      "id": "bc71fa87-f725-4d28-9d56-ee873c7ab9ab",
+      "name": "Create Job Description File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Generate File Names').item.json.job_description_file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        -1008
+      ],
+      "id": "c3df6189-eba8-45bf-b006-169d12a2bcf0",
+      "name": "Save Job Description"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52b5710b-afeb-456c-a0b8-9599ba93590d",
+              "name": "=job_description_file",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_JobDescription.txt\" }}",
+              "type": "string"
+            },
+            {
+              "id": "edda2f14-0963-4824-bbce-2ead85b5a4aa",
+              "name": "job_analysis_file",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_JobAnalysis.json\" }}",
+              "type": "string"
+            },
+            {
+              "id": "36a6d369-b6f0-490b-be98-e59b3ab48436",
+              "name": "resume_md",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_Resume.md\" }}",
+              "type": "string"
+            },
+            {
+              "id": "dfc97d89-5a45-42fe-8c78-64e1122cea90",
+              "name": "resume_docx",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_Resume.docx\" }}",
+              "type": "string"
+            },
+            {
+              "id": "d018403d-5864-4f4e-910e-f17b4d51f6ec",
+              "name": "resume_pdf",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_Resume.pdf\" }}",
+              "type": "string"
+            },
+            {
+              "id": "d0a8008c-0f6a-4228-b12c-9e3f4682cd2d",
+              "name": "cover_md",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_CoverLetter.md\" }}",
+              "type": "string"
+            },
+            {
+              "id": "272628cf-f30a-49e3-afad-b93b0eccc720",
+              "name": "cover_docx",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_CoverLetter.docx\" }}",
+              "type": "string"
+            },
+            {
+              "id": "dc0a0961-c391-429b-a0c7-2edabd98586d",
+              "name": "cover_pdf",
+              "value": "={{ \"/root/CareerOS/data/\" + $json.application_id + \"_CoverLetter.pdf\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        656,
+        -1008
+      ],
+      "id": "aa6a3191-63d4-4ab0-9301-5847ad096701",
+      "name": "Generate File Names"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -1264
+      ],
+      "id": "fa4491e9-bac9-49cc-b6d2-c781bc23ea0a",
+      "name": "Create Application Metadata File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ \"/root/CareerOS/data/application-metadata.json\" }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1088,
+        -1264
+      ],
+      "id": "8f40fee9-648b-40f5-9259-e4a4534dff7d",
+      "name": "Read/Write Files from Disk"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Job Description": {
+      "main": [
+        [
+          {
+            "node": "Generate Application-ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Parse Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "JD Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JD Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Prepare Analysis JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Analysis JSON": {
+      "main": [
+        [
+          {
+            "node": "Parse Analysis JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Analysis JSON": {
+      "main": [
+        [
+          {
+            "node": "Create Analysis File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Analysis File": {
+      "main": [
+        [
+          {
+            "node": "Save Job Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Application-ID": {
+      "main": [
+        [
+          {
+            "node": "Generate File Names",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Job Description File": {
+      "main": [
+        [
+          {
+            "node": "Save Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Job Description": {
+      "main": [
+        [
+          {
+            "node": "Read Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate File Names": {
+      "main": [
+        [
+          {
+            "node": "Create Application Metadata File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create Job Description File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Job Analysis": {
+      "main": [
+        []
+      ]
+    },
+    "Create Application Metadata File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "920be27d-8b6d-4fdf-ac30-3f463496f2e9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "99c1906125b7b88133b5204221f6be5a089c9eaef1ec3f93eb570808ab2cf12c"
+  },
+  "nodeGroups": [],
+  "id": "qHgzrt1cWkoTAwys",
+  "tags": []
+}

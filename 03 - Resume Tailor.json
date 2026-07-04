@@ -1,0 +1,337 @@
+{
+  "name": "03 - Resume Tailor",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        -608
+      ],
+      "id": "72f46efe-ebe3-45fd-b62c-4983a3793fae",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/root/CareerOS/data/candidate-profile.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -608
+      ],
+      "id": "a8fcaa5a-cf27-4c68-a41a-87b08a10f3ca",
+      "name": "Read Candidate Profile"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        -608
+      ],
+      "id": "16ba9c2b-d2df-49f2-aa45-cf46d0cb2b99",
+      "name": "Parse Candidate Profile"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert ATS Resume Writer and Technical Recruiter.\n\nYour task is to tailor the candidate's resume for the given Job Description.\n\nInstructions:\n\n1. Use ONLY the information available in the Candidate Profile.\n2. Do NOT invent or exaggerate any experience, certification, project or skill. Every company, designation, project, certification, award and achievement MUST exist in the Candidate Profile.\n\nIf any information is not explicitly available in the Candidate Profile, omit it.\n\nNever infer, assume or complete missing information.\n\n3. Reorder and emphasize the most relevant experience for this job.\n4. Optimize the resume for ATS by naturally incorporating important keywords from the Job Description.\n5. Keep the resume concise and professional.\n6. Use Markdown formatting.\n7. Return ONLY the resume in Markdown format. Do not include explanations, notes, or markdown code fences.\n8. If any employment dates are unavailable, omit the date instead of inventing or using placeholders such as \"20XX\".\n9. Do not create or modify job titles. Use exactly the titles available in the Candidate Profile.\n10. Do not add companies, projects, awards or certifications that are not present in the Candidate Profile.\n11. Every statement in the resume must be directly supported by the Candidate Profile. If information is missing, omit it.\n12. Before returning the resume, perform a self-check:\n\n- Remove any company not present in the Candidate Profile.\n- Remove any designation not present in the Candidate Profile.\n- Remove any certification not present in the Candidate Profile.\n- Remove any award not present in the Candidate Profile.\n- Remove any technology not present in the Candidate Profile.\n- Return only the final corrected Markdown resume.\n\nJob Description:\n\n{{ $('Parse Application Metadata').item.json.data[0].job_description }}\n\nCandidate Profile:\n\n{{ JSON.stringify($('Parse Candidate Profile').item.json, null, 2) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        -608
+      ],
+      "id": "71e4d09c-25f5-4af1-acb6-70bf173fe880",
+      "name": "Resume Tailor",
+      "credentials": {
+        "openAiApi": {
+          "id": "gTPFzBmYSwe9tWs0",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fa358c47-00f0-4853-a48a-cbc2d40bec86",
+              "name": "resume_markdown",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -608
+      ],
+      "id": "2dbc09e1-959e-47b3-987c-c0a1991fcbd2",
+      "name": "Prepare Resume Markdown"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "resume_markdown",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1152,
+        -384
+      ],
+      "id": "6d4fb3fd-d41f-43ea-9d61-000a337a811b",
+      "name": "Create Resume File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Parse Application Metadata').item.json.data[0].resume_md }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -928,
+        -384
+      ],
+      "id": "7a588e18-0bc0-4e24-b551-58e52f4c5e58",
+      "name": "Save Tailored Resume"
+    },
+    {
+      "parameters": {
+        "command": "=python3 /root/CareerOS/scripts/export_doc.py --input \"{{ $('Parse Application Metadata').item.json.data[0].resume_md }}\" --output \"{{ $('Parse Application Metadata').item.json.data[0].resume_docx }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -384
+      ],
+      "id": "ca0fad0c-a815-462e-97c4-0b570d9e77c9",
+      "name": "Export Resume DOCX"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/root/CareerOS/data/application-metadata.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -928,
+        -608
+      ],
+      "id": "30ba5a9a-413a-4375-9fa9-5fe6a0903ef3",
+      "name": "Read Application Metadata"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        -608
+      ],
+      "id": "e0d1bd4d-8442-4720-86f8-3c20a029234a",
+      "name": "Parse Application Metadata"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        -608
+      ],
+      "id": "b3ee747d-a836-47a1-9843-bffa4d133295",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Parse Application Metadata').item.json.data[0].job_analysis_file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        -608
+      ],
+      "id": "63db8685-6f2c-4ac4-b9d5-8ca1462cf8f4",
+      "name": "Read Job Analysis"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Read Application Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Parse Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Resume Tailor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume Tailor": {
+      "main": [
+        [
+          {
+            "node": "Prepare Resume Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Resume Markdown": {
+      "main": [
+        [
+          {
+            "node": "Create Resume File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Resume File": {
+      "main": [
+        [
+          {
+            "node": "Save Tailored Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Tailored Resume": {
+      "main": [
+        [
+          {
+            "node": "Export Resume DOCX",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Application Metadata": {
+      "main": [
+        [
+          {
+            "node": "Parse Application Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Application Metadata": {
+      "main": [
+        [
+          {
+            "node": "Read Job Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Read Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Job Analysis": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5abd3aee-20e0-468a-9690-c914396191cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "99c1906125b7b88133b5204221f6be5a089c9eaef1ec3f93eb570808ab2cf12c"
+  },
+  "nodeGroups": [],
+  "id": "gOA3df3oBLpCZ2OA",
+  "tags": []
+}

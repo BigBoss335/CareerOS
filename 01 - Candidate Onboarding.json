@@ -1,0 +1,235 @@
+{
+  "name": "01 - Candidate Onboarding",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "CareerOS - Candidate Onboarding",
+        "formDescription": "Upload your latest resume. CareerOS will analyze it and automatically update your Candidate Profile.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload Resume",
+              "fieldType": "file",
+              "multipleFiles": false,
+              "acceptFileTypes": ".pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -1120,
+        -16
+      ],
+      "id": "512a8c39-3de7-4f4e-8e95-10a65a7fda7e",
+      "name": "On form submission",
+      "webhookId": "86d2d568-b269-44c1-96e2-6497f80fed5d"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert Technical Recruiter and Resume Parser.\n\nYour task is to read the candidate's resume and extract structured information.\n\nResume:\n\n{{ $json.text }}\n\n\nOnly use information explicitly available in the resume.\nDo not generate future aspirations as completed achievements.\nDo not include planned certifications, courses, or degrees unless explicitly marked as completed.\n\nNormalize capitalization.\nReturn job titles and technologies in standard title case.\n\nReturn ONLY valid JSON.\n\nUse an empty string \"\" if a value is not available.\nUse an empty array [] if no values exist.\nDo not add any explanation or markdown.\n\nExtract ALL information present in the resume.\n\nIf multiple jobs exist:\n- current_company should contain the latest employer.\n- total_experience_years should be calculated from the resume.\n- projects should include important projects from all relevant jobs.\nIn Certification if found two or more similar values use one standardized name for each technology and remove duplicate values.\nDo not omit information simply because it doesn't fit into one field.\n\nIf a value is not available:\n\n• use \"\" for strings\n• use 0 for numbers\n• use [] for arrays\n\nIf information cannot be confidently determined from the resume, leave it empty.\n\nOnly include certifications explicitly listed as completed in the resume.\n\nDo NOT include certifications that are planned, in progress, or merely mentioned.\n\npreferred_job_titles should be inferred only from the candidate's current designation, career progression, profile summary, and stated objectives.\n\nReturn this JSON structure:\n\nYou are an expert Technical Recruiter and Resume Parser.\n\nYour task is to read the candidate's resume and extract structured information.\n\nResume:\n\n{{ $json.text }}\n\n\nOnly use information explicitly available in the resume.\nDo not generate future aspirations as completed achievements.\nDo not include planned certifications, courses, or degrees unless explicitly marked as completed.\n\nReturn ONLY valid JSON.\n\nUse an empty string \"\" if a value is not available.\nUse an empty array [] if no values exist.\nDo not add any explanation or markdown.\n\nExtract ALL information present in the resume.\n\nIf multiple jobs exist:\n- current_company should contain the latest employer.\n- total_experience_years should be calculated from the resume.\n- projects should include important projects from all relevant jobs.\n\nDo not omit information simply because it doesn't fit into one field.\n\nIf a value is not available:\n\n• use \"\" for strings\n• use 0 for numbers\n• use [] for arrays\n\nIf information cannot be confidently determined from the resume, leave it empty.\n\nOnly include certifications explicitly listed as completed in the resume.\n\nDo NOT include certifications that are planned, in progress, or merely mentioned.\n\npreferred_job_titles should be inferred only from the candidate's current designation, career progression, profile summary, and stated objectives.\n\nReturn this JSON structure:\n\n{\n  \"personal\": {\n    \"full_name\": \"\",\n    \"first_name\": \"\",\n    \"middle_name\": \"\",\n    \"last_name\": \"\",\n    \"display_name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"city\": \"\",\n    \"country\": \"\"\n  },\n\n  \"career\": {\n    \"current_company\": \"\",\n    \"current_designation\": \"\",\n    \"total_experience_years\": 0,\n    \"career_goal\": \"\",\n    \"preferred_job_titles\": [],\n    \"preferred_industries\": [],\n    \"minimum_expected_salary_lpa\": 0\n  },\n\n  \"technical\": {\n    \"operating_systems\": [],\n    \"cloud_platforms\": [],\n    \"virtualization\": [],\n    \"containers\": [],\n    \"programming_languages\": [],\n    \"automation_tools\": [],\n    \"configuration_management\": [],\n    \"monitoring_tools\": [],\n    \"databases\": [],\n    \"networking\": [],\n    \"core_skills\": []\n  },\n\n  \"management\": {\n    \"leadership_skills\": [],\n    \"management_skills\": [],\n    \"stakeholder_management\": [],\n    \"project_management\": [],\n    \"team_size_managed\": \"\"\n  },\n\n  \"education\": [\n  {\n    \"degree\": \"\",\n    \"institution\": \"\",\n    \"year\": \"\"\n  }\n],\n\n  \"certifications\": [\n  {\n    \"name\": \"\",\n    \"issuer\": \"\",\n    \"year\": \"\"\n  }\n],\n\n  \"projects\": [\n  {\n    \"name\": \"\",\n    \"company\": \"\",\n    \"description\": \"\",\n    \"technologies\": []\n  }\n],\n\n  \"languages\": [],\n\n  \"achievements\": [],\n\n  \"summary\": \"\",\n\n\"metadata\": {\n  \"profile_version\": 1,\n  \"parser\": \"CareerOS Candidate Intelligence v1\"\n}\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -800,
+        -16
+      ],
+      "id": "f568a450-a71b-4042-bdef-f814503048f7",
+      "name": "Candidate Intelligence",
+      "credentials": {
+        "openAiApi": {
+          "id": "gTPFzBmYSwe9tWs0",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e842a9b-7925-419f-9276-9203b3aff848",
+              "name": "profile_json",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -16
+      ],
+      "id": "7b7ef840-a64b-426c-9c95-d7cd550965ac",
+      "name": "Prepare Profile JSON"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "Upload_Resume",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        -16
+      ],
+      "id": "55b78445-30c5-4d00-81af-e9f9aa9cd3eb",
+      "name": "Extract Resume PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: JSON.parse($json.profile_json)\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        -16
+      ],
+      "id": "12b59e8b-ff46-4e81-9a8f-29c52ec6c4e5",
+      "name": "Parse Profile JSON"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {
+          "fileName": "candidate-profile.json"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "2f096cbe-7260-49f4-9392-40890abe70a5",
+      "name": "Create Profile File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/root/CareerOS/data/candidate-profile.json",
+        "options": {
+          "append": false
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "274e6c7d-f38d-4d9b-8c1a-3db8c4d84af0",
+      "name": "Save Candidate Profile"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract Resume PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Candidate Intelligence": {
+      "main": [
+        [
+          {
+            "node": "Prepare Profile JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Profile JSON": {
+      "main": [
+        [
+          {
+            "node": "Parse Profile JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Resume PDF": {
+      "main": [
+        [
+          {
+            "node": "Candidate Intelligence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Profile JSON": {
+      "main": [
+        [
+          {
+            "node": "Create Profile File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Profile File": {
+      "main": [
+        [
+          {
+            "node": "Save Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Candidate Profile": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1ef86196-618f-4c24-b4b9-2d40ba9ee2e4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "99c1906125b7b88133b5204221f6be5a089c9eaef1ec3f93eb570808ab2cf12c"
+  },
+  "nodeGroups": [],
+  "id": "cnEfQf11CxdmTANI",
+  "tags": []
+}

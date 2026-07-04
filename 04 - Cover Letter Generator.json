@@ -1,0 +1,337 @@
+{
+  "name": "04 - Cover Letter Generator",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -768
+      ],
+      "id": "9da6275e-4077-40bb-82a7-1e4e69b4f9fc",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/root/CareerOS/data/candidate-profile.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        -768
+      ],
+      "id": "7e2c9105-b695-4653-b549-d6b16e1f916a",
+      "name": "Read Candidate Profile"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        -768
+      ],
+      "id": "356ecc9d-07b9-447b-8083-8142f9831987",
+      "name": "Parse Candidate Profile"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are an expert Technical Recruiter and Professional Career Coach.\n\nWrite a professional cover letter tailored for the given Job Description.\n\nRules:\n\n1. Use ONLY information available in the Candidate Profile and Job Analysis.\n2. Never invent experience, companies, dates, projects, certifications or achievements.\n3. Explain why the candidate is a good fit for the role.\n4. Highlight the most relevant skills and experience.\n5. Keep the tone professional, confident and concise.\n6. Keep the cover letter between 300 and 400 words.\n7. Return ONLY Markdown.\n8. Do not use markdown code fences.\n\nJob Description:\n\n{{ $('Parse Application Metadata').item.json.data[0].job_description }}\n\nCandidate Profile:\n\n{{ JSON.stringify($('Parse Candidate Profile').item.json, null, 2) }}\n\nJob Analysis:\n\n{{ JSON.stringify($('Parse Job Analysis').item.json, null, 2) }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1152,
+        -768
+      ],
+      "id": "dce9b02c-4aa9-43f8-8da1-a8dbb59ea2a1",
+      "name": "Cover Letter Generator",
+      "credentials": {
+        "openAiApi": {
+          "id": "gTPFzBmYSwe9tWs0",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "16a8475f-3633-427e-856f-fa3925455e13",
+              "name": "cover_letter_markdown",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        -544
+      ],
+      "id": "7e20a4fe-8ee4-441e-a9ea-c0c114c61394",
+      "name": "Prepare Cover Letter"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "cover_letter_markdown",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -544
+      ],
+      "id": "573de90f-2a64-4d46-88b3-7fb2f6ec2b87",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $('Parse Application Metadata').item.json.data[0].cover_md }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        -544
+      ],
+      "id": "a4c39883-8d36-4ba2-92d6-05b2c1407568",
+      "name": "Save Cover Letter"
+    },
+    {
+      "parameters": {
+        "command": "=python3 /root/CareerOS/scripts/export_doc.py --input \"{{ $('Parse Application Metadata').item.json.data[0].cover_md }}\" --output \"{{ $('Parse Application Metadata').item.json.data[0].cover_docx }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        464,
+        -544
+      ],
+      "id": "a09305e2-9f6b-4272-bf93-8b7317c8ca98",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "fileSelector": "/root/CareerOS/data/application-metadata.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -64,
+        -768
+      ],
+      "id": "7b33a7d0-d338-481e-85bf-e1f4b0a20aa4",
+      "name": "Read Application Metadata"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        -768
+      ],
+      "id": "a5e56c6f-3f0b-4091-a1fb-f946b54ada0c",
+      "name": "Parse Application Metadata"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('Parse Application Metadata').item.json.data[0].job_analysis_file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        -768
+      ],
+      "id": "c0cd455d-fc9a-4ec1-8f4a-2df5c0bab6a1",
+      "name": "Read Job Analysis"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        -768
+      ],
+      "id": "aff5c2ef-72c1-427c-9bff-6826ce32fae4",
+      "name": "Parse Job Analysis"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Read Application Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Parse Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Candidate Profile": {
+      "main": [
+        [
+          {
+            "node": "Cover Letter Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cover Letter Generator": {
+      "main": [
+        [
+          {
+            "node": "Prepare Cover Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cover Letter": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Save Cover Letter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Cover Letter": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Application Metadata": {
+      "main": [
+        [
+          {
+            "node": "Parse Application Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Application Metadata": {
+      "main": [
+        [
+          {
+            "node": "Read Job Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Job Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse Job Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Job Analysis": {
+      "main": [
+        [
+          {
+            "node": "Read Candidate Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d5bee5f5-0343-4551-aea3-9be14daf325e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "99c1906125b7b88133b5204221f6be5a089c9eaef1ec3f93eb570808ab2cf12c"
+  },
+  "nodeGroups": [],
+  "id": "GmEdjy6271zKQpJ3",
+  "tags": []
+}
